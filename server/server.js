@@ -3,7 +3,6 @@ import cors from 'cors';
 import { db } from './db.js';
 
 const app = express();
-const PORT = 3000;
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -87,6 +86,21 @@ app.put('/api/notifications/read', async (req, res) => {
   res.json(notifications);
 });
 
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve static frontend files if in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../dist')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist', 'index.html'));
+  });
+}
+
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Backend API running at http://localhost:${PORT}`);
 });
