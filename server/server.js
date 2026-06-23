@@ -1,8 +1,24 @@
 import express from 'express';
 import cors from 'cors';
-import { db } from './db.js';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import { db, seedDatabaseIfEmpty } from './db.js';
+
+dotenv.config();
 
 const app = express();
+
+const MONGO_URI = process.env.MONGO_URI;
+if (!MONGO_URI) {
+  console.warn("⚠️  WARNING: MONGO_URI is not set. The server might crash if it tries to connect.");
+} else {
+  mongoose.connect(MONGO_URI)
+    .then(() => {
+      console.log('✅ Connected to MongoDB Cloud Database');
+      seedDatabaseIfEmpty();
+    })
+    .catch(err => console.error('❌ MongoDB Connection Error:', err));
+}
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -27,7 +43,7 @@ app.put('/api/tickets/:id', async (req, res) => {
   if (index === -1) return res.status(404).json({ error: 'Ticket not found' });
   tickets[index] = { ...tickets[index], ...req.body };
   await db.saveTickets(tickets);
-  res.json(tickets); // return all to sync
+  res.json(tickets);
 });
 
 app.delete('/api/tickets/:id', async (req, res) => {
